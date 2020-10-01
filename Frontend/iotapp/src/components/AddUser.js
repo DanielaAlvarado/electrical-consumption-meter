@@ -51,7 +51,7 @@ class GenerateUser extends React.Component{
   render() {
     return (
       <div>
-        <Popup trigger={
+        {/* <Popup trigger={
             <button className="add-user">
                 Usuarios 
               <img className="add-img" src={require('../icons/flecha_abajo.png')} alt="Icon"/>
@@ -111,7 +111,7 @@ class GenerateUser extends React.Component{
               </div>
             </div>
           )}
-        </Popup>
+        </Popup> */}
 
       </div>
     );

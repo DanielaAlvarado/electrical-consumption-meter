@@ -1076,3 +1076,20 @@ code {
   height: 150px;
   display: flex;
 }
+
+.chart__date{
+    margin-left: 3% !important;
+}
+
+.chart__error{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
+
+    height: 340px;
+    width: 880px;
+
+    font-family: 'Raleway', Fallback, sans-serif;
+    font-size: 25px;
+}

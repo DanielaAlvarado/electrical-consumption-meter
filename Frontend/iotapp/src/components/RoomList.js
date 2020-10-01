@@ -3,6 +3,7 @@ import ReactDOM from'react-dom';
 import PropTypes from 'prop-types';
 import Room from './Room.js';
 import { connect } from 'react-redux';
+import ShowChart from './ShowChart';
 
 class GenerateRoomList extends React.Component{
   constructor(props) {
@@ -57,6 +58,7 @@ class GenerateRoomList extends React.Component{
       return (
         <div>
           <div className="room-list">
+            <ShowChart/>
             {items.map(item => (
                 <Room room={item}/>
               ))}
