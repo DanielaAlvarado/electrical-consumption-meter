@@ -355,7 +355,7 @@ def StageCountDevices():
 	val = (stage_id_stage,)
 	#mycursor.callproc('buscarStage', val)
 
-	sql = "SELECT count(*) FROM device d JOIN room r ON d.room_id_room = r.id_room JOIN stage s ON r.stage_id_stage = s.id_stage AND s.id_stage = %s"
+	sql = "SELECT count(*) FROM device d JOIN room r ON d.room_id_room = r.id_room AND d.status=1 JOIN stage s ON r.stage_id_stage = s.id_stage AND s.id_stage = %s"
 	mycursor.execute(sql, val)
 
 	row = mycursor.fetchone()
@@ -447,7 +447,7 @@ def SearchRoom():
 	val = (id_stage,)
 	#mycursor.callproc('buscarStage', val)
 
-	sql = "SELECT * FROM room WHERE stage_id_stage = %s;"
+	sql = "SELECT * FROM room WHERE stage_id_stage = %s AND status=1;"
 	mycursor.execute(sql, val)
 
 	row = mycursor.fetchone()
@@ -457,7 +457,6 @@ def SearchRoom():
 		id_room = {}
 		id_room["id"] = row[0]
 		id_room["name"] = row[1]
-		id_room["type"] = row[2]
 		room.append(id_room)
 		row = mycursor.fetchone()
 
@@ -684,6 +683,28 @@ def ShowAllDevice():
 		row = mycursor.fetchone()
 
 	items["items"] = device
+	return jsonify(items), 200
+
+@app.route('/devices', methods=['GET'])
+def deviceIndex():
+	mydb = mysql.connector.connect(**config)
+	mycursor = mydb.cursor(buffered=True)
+
+	sql = 'SELECT * FROM device where status=1'
+	mycursor.execute(sql)
+
+	row = mycursor.fetchone()
+	items = {}
+	device = []
+	while row is not None:
+		id_device = {}
+		id_device['id'] = row[0]
+		id_device['name'] = row[1]
+		id_device['type'] = row[3]
+		device.append(id_device)
+		row = mycursor.fetchone()
+
+	items['items'] = device
 	return jsonify(items), 200
 
 #################################
