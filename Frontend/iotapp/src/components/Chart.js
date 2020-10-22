@@ -3,87 +3,362 @@ import ReactDOM from'react-dom';
 import * as d3 from 'd3';
 import * as moment from 'moment';
 import {DatePicker} from "@material-ui/pickers";
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import {MuiPickersUtilsProvider} from '@material-ui/pickers';
 import MomentUtils from '@date-io/moment';
 import "moment/locale/es";
+import {SingleSelect} from 'react-select-material-ui';
+import clsx from 'clsx';
+import {IconButton} from '@material-ui/core';
+import {withStyles, createStyles} from '@material-ui/core/styles';
+import {legendColor} from 'd3-svg-legend'; 
 
-moment.locale('en');
-
-class GenerateChart extends React.Component{
+class GenerateChart extends React.PureComponent {
     constructor(props){
         super(props);
-        
+    
         this.state = {
-            selectedDate: moment(),
+            view: 'Mensual',
+            selectedMonth: moment(),
+            selectedWeek: moment().startOf('week'),
             status: true
         };
     }
 
     componentDidMount(){
-        this.buildChart(this.state.selectedDate);
+        this.buildChart();
     }
 
-    async buildChart(date){
-        const response = await fetch(`http://localhost:3001/groups/month?month=${date.format('YYYY-MM')}`);
-        d3.select(this.refs.chart).selectAll('*').remove();
-        
-        if(response.status == 200){
-            const data = await response.json();
-            this.setState({
-                status: true
-            });
+    handleViewSelection(view){
+        this.setState({
+            view
+        }, () => {
+            this.buildChart();
+        });
+    }
 
-            const margin = {
-                top: 30,
-                right: 0,
-                bottom: 30,
-                left: 40
-            };
-            const height = 500;
-            const width = 1000;
+    handleMonthSelection(month){
+        this.setState({
+            selectedMonth: month
+        }, () => {
+            this.buildChart();
+        });
+    }
 
-            const x = d3.scaleBand().domain(d3.range(data.length)).range([margin.left, width - margin.right]).padding(0.1);
-            const y = d3.scaleLinear().domain([0, d3.max(data, (point) => {
-                return point.consumption;
-            })]).nice().range([height - margin.bottom, margin.top]);
-            
-            const xAxis = (g) => {
-                return g.attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x).tickFormat((index) => {
-                    return data[index].day;
-                }).tickSizeOuter(0));
-            };
-            const yAxis = (g) => {
-                return g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y)).call((g) => {
-                    return g.select('.domain').remove();
-                }).call((g) => {
-                    return g.append('text').attr('x', -margin.left).attr('y', 10).attr('fill', 'currentColor').attr('text-anchor', 'start');
+    handleWeekSelection(week){
+        this.setState({
+            selectedWeek: moment(week).startOf('week')
+        }, () => {
+            this.buildChart();
+        });
+    }
+
+    async buildChart(){
+        d3.select(this.refs.monthView).selectAll('*').remove();
+        d3.select(this.refs.weekView).selectAll('*').remove();
+
+        if(this.state.view == 'Mensual'){
+            let response = await fetch(`http://localhost:3001/groups/month?month=${this.state.selectedMonth.format('YYYY-MM')}`);
+
+            if(response.status == 200){
+                response = await response.json();
+                this.setState({
+                    status: true
                 });
-            };
 
-            const svg = d3.select(this.refs.chart).append('svg').attr('viewBox', [0, 0, width, height]);
-            svg.append('g').attr('fill', 'steelblue').selectAll('rect').data(data).join('rect').attr('x', (point, index) => {
-                return x(index);
-            }).attr('y', (point) => {
-                return y(point.consumption);
-            }).attr('height', (point) => {
-                return y(0) - y(point.consumption);
-            }).attr('width', x.bandwidth());
+                const data = response.data.map((point) => {
+                    let consumption = 0;
+                    Object.keys(point).forEach((type) => {
+                        if(type != 'day'){
+                            consumption += point[type];
+                        }
+                    });
 
-            svg.append('g').call(xAxis);
-            svg.append('g').call(yAxis);
+                    return {
+                        day: point.day,
+                        consumption
+                    };
+                });
+                const columns = ['day', 'consumption'];
+                const series = columns.slice(1).map((key) => {
+                    return data.map(({[key]: value, day}) => {
+                        return {
+                            key,
+                            day,
+                            value
+                        }
+                    });
+                });
+
+                const margin = {
+                    top: 30,
+                    right: 50, 
+                    bottom: 30,
+                    left: 30
+                };
+                const height = 400;
+                const width = 800;
+
+                const x = d3.scalePoint().domain(data.map((point) => {
+                    return point.day;
+                })).range([margin.left, width - margin.right]);
+                const y = d3.scaleLinear().domain([0, d3.max(series, (serie) => {
+                    return d3.max(serie, (point) => {
+                        return point.value;
+                    });
+                })]).range([height - margin.bottom, margin.top]);
+                const z = d3.scaleOrdinal(columns.slice(1), d3.schemeCategory10);
+
+                const xAxis = (g) => {
+                    return g.attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0));
+                };
+
+
+                const svg = d3.select(this.refs.monthView).append('svg').attr('viewBox', [0, 0, width, height]);
+                svg.append('g').call(xAxis);
+                svg.on('click', (event) => {
+                    d3.select(this.refs.dayView).selectAll('*').remove();
+                });
+
+                const serie = svg.append('g').selectAll('g').data(series).join('g');
+                serie.append('path').attr('fill', 'none').attr('stroke', (point) => {
+                    return z(point[0].key);
+                }).attr('stroke-width', 1.5).attr('d', d3.line().x((point) => {
+                    return x(point.day);
+                }).y((point) => {
+                    return y(point.value);
+                }));
+                
+                const that = this;
+                serie.append('g').attr('font-family', 'sans-serif').attr('font-size', 10).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('text-anchor', 'middle').selectAll('text').data((point) => {
+                    return point;
+                }).join('circle').attr('cx', (point) => {
+                    return x(point.day);
+                }).attr('cy', (point) => {
+                    return y(point.value);
+                }).attr('r', (point, index) => {
+                    return 5;
+                }).style('fill', '#fcb0b5').on('mouseover', function(event){
+                    d3.select(this).transition().duration(200).style('fill', '#d30715');
+                }).on('mouseout', function(event){
+                    d3.select(this).transition().duration(500).style('fill', '#fcb0b5');
+                }).on('click', function(event){
+                    event.stopPropagation();
+
+                    const xPosition = d3.pointer(event, this)[0]
+                    const domain = x.domain();
+                    const range = x.range();
+                    const rangePoints = d3.range(range[0], range[1], x.step());
+                    const day = domain[d3.bisect(rangePoints, xPosition)];
+                    
+                    that.buildDayChart(response.data.filter((point) => {
+                        return point.day == day;
+                    }), response.columns);
+                }).clone(true).lower().attr('fill', 'none').attr('stroke', 'white').attr('stroke-width', 6);
+
+                this.buildLegend(response.data, response.columns.slice(1));
+            }else{
+                this.setState({
+                    status: false
+                });
+            }
         }else{
-            this.setState({
-                status: false
-            });
+            let response = await fetch(`http://localhost:3001/groups/week?week=${this.state.selectedWeek.format('YYYY-MM-DD')}`);
+            
+            if(response.status == 200){
+                response = await response.json();
+                this.setState({
+                    status: true
+                });
+
+                const {data, columns} = response;
+                const series = d3.stack().keys(columns.slice(1))(data).map((point) => {
+                    point.forEach((entry) => {
+                        entry.key = point.key;
+                    });
+
+                    return point;
+                });
+
+                const margin = {
+                    top: 30,
+                    right: 0,
+                    bottom: 30,
+                    left: 40
+                };
+                const height = 400;
+                const width = 800;
+
+                const x = d3.scaleBand().domain(data.map((point) => {
+                    return point.day;
+                })).range([margin.left, width - margin.right]).padding(0.1);
+                const y = d3.scaleLinear().domain([0, d3.max(series, (point) => {
+                    return d3.max(point, (point) => {
+                        return point[1];
+                    });
+                })]).rangeRound([height - margin.bottom, margin.top]);
+                
+                const xAxis = (g) => {
+                    return g.attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0)).call((g) => {
+                        return g.selectAll('.domain').remove();
+                    });
+                };
+                const yAxis = (g) => {
+                    return g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(null, 's')).call((g) => {
+                        return g.selectAll('.domain').remove();
+                    });
+                };
+
+                const color = d3.scaleOrdinal().domain(series.map((point) => {
+                    return point.key;
+                })).range(d3.schemeCategory10).unknown('#ccc');
+
+                const svg = d3.select(this.refs.weekView).append('svg').attr('viewBox', [0, 0, width, height]);
+                svg.append('g').selectAll('g').data(series).join('g').attr('fill', (point) => {
+                    return color(point.key);
+                }).selectAll('rect').data((point) => {
+                    return point
+                }).join('rect').attr('x', (point, index) => {
+                    return x(point.data.day);
+                }).attr('y', (point) => {
+                    return y(point[1]);
+                }).attr('height', (point) => {
+                    return y(point[0]) - y(point[1]);
+                }).attr('width', x.bandwidth()).append('title').text((point) => {
+                    return `${point.data.day} ${point.key}
+                    ${point.data[point.key]}`;
+                });
+                
+                svg.append('g').call(xAxis);
+                svg.append('g').call(yAxis);
+
+                this.buildLegend(data, columns.slice(1));
+            }else{
+                this.setState({
+                    status: false
+                });
+            }
         }
     }
 
-    handleMonthSelection(date){
-        this.setState(({
-            selectedDate: date
-        }));
+    buildDayChart(data, columns){
+        d3.select(this.refs.dayView).selectAll('*').remove();
+        const series = d3.stack().keys(columns.slice(1))(data).map((point) => {
+            point.forEach((entry) => {
+                entry.key = point.key;
+            });
 
-        this.buildChart(date);
+            return point;
+        });
+
+        const margin = {
+            top: 30,
+            right: 0,
+            bottom: 30,
+            left: 40
+        };
+        const height = 400;
+        const width = 200;
+
+        const x = d3.scaleBand().domain(data.map((point) => {
+            return point.day;
+        })).range([margin.left, width - margin.right]).padding(0.1);
+        const y = d3.scaleLinear().domain([0, d3.max(series, (point) => {
+            return d3.max(point, (point) => {
+                return point[1];
+            });
+        })]).rangeRound([height - margin.bottom, margin.top]);
+
+        const color = d3.scaleOrdinal().domain(series.map((point) => {
+            return point.key;
+        })).range(d3.schemeCategory10).unknown('#ccc');
+
+        const svg = d3.select(this.refs.dayView).append('svg').attr('viewBox', [0, 0, width, height]);
+        svg.append('g').selectAll('g').data(series).join('g').attr('fill', (point) => {
+            return color(point.key);
+        }).selectAll('rect').data((point) => {
+            return point
+        }).join('rect').attr('x', (point, index) => {
+            return x(point.data.day);
+        }).attr('y', (point) => {
+            return y(point[1]);
+        }).attr('height', (point) => {
+            return y(point[0]) - y(point[1]);
+        }).attr('width', x.bandwidth()).append('title').text((point) => {
+            return `${point.data.day} ${point.key}
+            ${point.data[point.key]}`;
+        });
+    }
+
+    buildLegend(data, types){
+        d3.select(this.refs.legend).selectAll('*').remove();
+
+        const consumptionByType = {};
+        let totalConsumption = 0;
+
+        data.forEach((point) => {
+            Object.keys(point).forEach((type) => {
+                if(type != 'day'){
+                    if(!consumptionByType[type]){
+                        consumptionByType[type] = {};
+                    }
+                    
+                    consumptionByType[type].consumption = (consumptionByType[type].consumption || 0) + point[type];
+                    totalConsumption += point[type];
+                }
+            })
+        });
+        Object.keys(consumptionByType).forEach((type) => {
+            consumptionByType[type].percentage = Math.round(consumptionByType[type].consumption / totalConsumption * 100);
+        });
+
+        types = types.map((type) => {
+            return `${type}: ${consumptionByType[type].percentage}%`;
+        });
+
+        const scale = d3.scaleOrdinal().domain(types).range(d3.schemeCategory10);
+        const legend = legendColor().scale(scale);
+
+        const svg = d3.select(this.refs.legend).append('svg').attr('width', 960).attr('height', 500);
+        svg.append('g').attr('class', 'legendOrdinal').attr('transform', 'translate(20, 20)');
+
+        svg.select('.legendOrdinal').call(legend);        
+    }
+
+    renderWrappedWeekDay = (date, selectedDate, dayInCurrentMonth) => {
+        const {classes} = this.props;
+        console.log(date.toDate());
+        console.log(selectedDate.toDate());
+        
+        const start = selectedDate.startOf('week');
+        const end = selectedDate.endOf('week');
+
+        const dayIsBetween = date.isBetween(start, end, null, '[]');
+        const isFirstDay = date.isSame(start, 'day');
+        const isLastDay = date.isSame(end, 'day');
+
+        const wrapperClassName = clsx({
+            [classes.highlight]: dayIsBetween,
+            [classes.firstHighlight]: isFirstDay,
+            [classes.endHighlight]: isLastDay
+        });
+        const dayClassName = clsx(classes.day, {
+            [classes.nonCurrentMonthDay]: !dayInCurrentMonth,
+            [classes.highlightNonCurrentMonthDay]: !dayInCurrentMonth && dayIsBetween
+        });
+
+        return (
+            <div className={wrapperClassName}>
+                <IconButton className={dayClassName}>
+                    <span>{date.format('D')}</span>
+                </IconButton>
+            </div>
+        );
+    }
+    
+    formatWeekSelectLabel = (date, invalidLabel) => {
+        const dateClone = moment(date);
+
+        return dateClone && dateClone.isValid() ? `Semana del ${dateClone.startOf('week').format('D MMM')}` : invalidLabel;
     }
 
     render(){
@@ -95,16 +370,33 @@ class GenerateChart extends React.Component{
                     </h1>
                 </div>
                 <div className="chart__date">
+                    <SingleSelect label="Selecciona una vista" value={this.state.view} options={['Mensual', 'Semanal']} onChange={(view) => this.handleViewSelection(view)}/>
                     <MuiPickersUtilsProvider utils={MomentUtils} locale={"es"}>
-                        <DatePicker openTo="month" views={["year", "month"]} label="Selecciona un mes" value={this.state.selectedDate} onChange={(date) => this.handleMonthSelection(date)}/>
+                        {this.state.view == 'Mensual' ? 
+                            <DatePicker openTo="month" views={["year", "month"]} label="Selecciona un mes" value={this.state.selectedMonth} onChange={(month) => this.handleMonthSelection(month)}/>
+                            :
+                            <DatePicker value={this.state.selectedWeek} onChange={(week) => this.handleWeekSelection(week)} renderDay={this.renderWrappedWeekDay} labelFunc={this.formatWeekSelectLabel}/>
+                        }
                     </MuiPickersUtilsProvider>
                 </div>
-                {this.state.status ?
-                <div ref="chart" className="device-list"></div>
-                :
+                {!this.state.status ?
                 <div className="chart__error">
                     <img className="error-icon" src={require('../icons/sadface.png')} alt="Icon"/>
                     No hay datos para el periodo seleccionado
+                </div>
+                :
+                <div>
+                    {this.state.view == 'Mensual' ?
+                    <div className="chart">
+                        <div ref="monthView" className="chart__view"></div>
+                        <div ref="dayView" className="chart__day"></div>
+                    </div>
+                    :
+                    <div className="chart">
+                        <div ref="weekView" className="chart__view"></div>
+                    </div>
+                     }
+                    <div ref="legend"></div>
                 </div>
                 }
             </div>
@@ -117,8 +409,46 @@ ReactDOM.render(
     document.getElementById('root')
 );
 
-export default function Chart(){
-    return (
-        <GenerateChart/>
-    );
-}
+const styles = createStyles((theme) => ({
+    dayWrapper: {
+        position: "relative",
+    },
+    day: {
+        width: 36,
+        height: 36,
+        fontSize: theme.typography.caption.fontSize,
+        margin: "0 2px",
+        color: "inherit",
+    },
+    customDayHighlight: {
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: "2px",
+        right: "2px",
+        border: `1px solid ${theme.palette.secondary.main}`,
+        borderRadius: "50%",
+    },
+    nonCurrentMonthDay: {
+        color: theme.palette.text.disabled,
+    },
+    highlightNonCurrentMonthDay: {
+        color: "#676767",
+    },
+    highlight: {
+        background: theme.palette.primary.main,
+        color: theme.palette.common.white,
+    },
+    firstHighlight: {
+        extend: "highlight",
+        borderTopLeftRadius: "50%",
+        borderBottomLeftRadius: "50%",
+    },
+    endHighlight: {
+        extend: "highlight",
+        borderTopRightRadius: "50%",
+        borderBottomRightRadius: "50%",
+    },
+}));
+
+export default withStyles(styles)(GenerateChart);
