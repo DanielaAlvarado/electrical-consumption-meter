@@ -57,8 +57,8 @@ class GenerateRoomList extends React.Component{
 
       return (
         <div>
-          <div className="room-list">
             <ShowChart/>
+          <div className="room-list">
             {items.map(item => (
                 <Room room={item}/>
               ))}

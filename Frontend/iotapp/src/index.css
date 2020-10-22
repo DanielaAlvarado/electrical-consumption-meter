@@ -147,10 +147,13 @@ code {
 }
 .device-items{
   display: inline-flex;
+  flex-wrap: wrap;
 }
 .room-list{
   background:rgb(235, 234, 234);
-  height: 500px;
+  height: 450px;
+
+  overflow-y: auto;
 }
 .user-list{
   background:rgb(255, 255, 255);
@@ -337,7 +340,7 @@ code {
   left: 1085px;
   padding: 20px;
   background: rgb(235, 234, 234);
-  width: 230px;
+  width: 250px;
 }
 .screen-room nav {
   background: rgb(235, 234, 234);
@@ -1078,6 +1081,13 @@ code {
 }
 
 .chart__date{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    
+    width: 30%;
+    height: 20vh;
+
     margin-left: 3% !important;
 }
 
@@ -1092,4 +1102,21 @@ code {
 
     font-family: 'Raleway', Fallback, sans-serif;
     font-size: 25px;
+}
+
+.chart{
+    display: flex;
+
+    height: 340px;
+    width: 880px;
+
+    background: #ffffff;
+}
+
+.chart__view{
+    flex-basis: 80%;
+}
+
+.chart__day{
+    flex-basis: 20%;
 }
