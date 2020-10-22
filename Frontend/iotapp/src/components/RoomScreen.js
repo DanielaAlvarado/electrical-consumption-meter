@@ -9,7 +9,7 @@ export function PureRoomScreen({id_stage}) {
       <div className="screen-room">
         <nav>
           <h1 className="screen-title">
-            <span className="screen-message">Salas</span>
+            <span className="screen-message">Escenarios</span>
           </h1>
         </nav>
         <RoomList stage={id_stage}/>
