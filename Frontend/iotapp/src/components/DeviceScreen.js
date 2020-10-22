@@ -37,8 +37,8 @@ class GenerateDeviceScreen extends React.Component{
       <div className="screen-device">
         <div className="fondo">
           <h1 className="screen-title">
-            <span className="screen-message">Dispositivos</span>
-            <span className="screen-place" id="name">[ {this.state.name} ]</span>
+            <span className="screen-message">{this.state.name}</span>
+            <span className="screen-place" id="name"> [ Dispositivos ]</span>
           </h1>
         </div>
         <DeviceList room={this.state.id}/>
