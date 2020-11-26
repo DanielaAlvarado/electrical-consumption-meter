@@ -3,7 +3,9 @@ const groupController = require('../controllers/groupController');
 
 const router = new express.Router();
 
-router.get('/groups/month', groupController.month);
-router.get('/groups/week', groupController.week);
+router.get('/groups/devicesMonthly', groupController.devicesMonthly);
+router.get('/groups/devicesWeekly', groupController.devicesWeekly);
+router.get('/groups/roomsMonthly', groupController.roomsMonthly);
+router.get('/groups/roomsWeekly', groupController.roomsWeekly);
 
 module.exports = router;
