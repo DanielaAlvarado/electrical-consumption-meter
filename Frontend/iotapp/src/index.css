@@ -25,12 +25,6 @@ code {
 *             A_P_P              *
 *                                *
 *********************************/
-/* .device-component{
-  
-}
- */
-
-
 
 .terms {
   display: flex;
@@ -306,8 +300,8 @@ code {
 .room-name {
   color:    rgb(151, 151, 151);
   font-family: 'Raleway', Fallback, sans-serif;
-  font-size: 20px;
-  margin-left: 2px;
+  font-size: 18px;
+  margin-left: 10px;
   margin-top: 0.5px;
 }
 
@@ -871,10 +865,6 @@ code {
   border-color: #e04141;
   border-left: 40px;
  }
- .room-component{
-
- }
-
 
 /*********************************** 
 *                                  *
@@ -1082,13 +1072,23 @@ code {
 
 .chart__date{
     display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    
-    width: 30%;
-    height: 20vh;
+    width: 75%;
+    justify-content: space-between;
 
     margin-left: 3% !important;
+    padding-top: 3vh;
+}
+
+.chart__view-selector{
+    flex-basis: 33%;
+}
+
+.chart__date-selector{
+    flex-basis: 33%;
+}
+
+.chart__room-selector{
+    flex-basis: 33%;
 }
 
 .chart__error{
@@ -1119,4 +1119,92 @@ code {
 
 .chart__day{
     flex-basis: 20%;
+}
+
+.mui-tabs__bar {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    background-color: transparent;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+.mui-tabs__bar > li {
+    display: inline-block;
+}
+.mui-tabs__bar > li > a {
+    display: block;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+    cursor: default;
+    height: 48px;
+    line-height: 48px;
+    padding-left: 24px;
+    padding-right: 24px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.mui-tabs__bar > li > a:hover {
+    text-decoration: none;
+}
+.mui-tabs__bar > li.mui--is-active {
+    border-bottom: 2px solid #2196f3;
+}
+.mui-tabs__bar > li.mui--is-active > a {
+    color: #2196f3;
+}
+.mui-tabs__bar.mui-tabs__bar--justified {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+.mui-tabs__bar.mui-tabs__bar--justified > li {
+    display: table-cell;
+}
+.mui-tabs__bar.mui-tabs__bar--justified > li > a {
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+.mui-tabs__pane {
+    display: none;
+}
+.mui-tabs__pane.mui--is-active {
+    display: block;
+}
+
+.MuiInputBase-input{
+    padding: 12px 0 7px !important;
+}
+
+.screen__delete{
+    color: red; 
+    font-family: 'Raleway', Fallback, sans-serif;
+    font-size: 25px; 
+    font-weight: 400; 
+    letter-spacing: 1px;
+
+    cursor: pointer;
+}
+
+.room{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.welcome{
+    width: 50vw;
+    padding-top: 3vh;
+    padding-left: 20px;
+
+    font-family: 'Raleway', Fallback, sans-serif;
+    font-size: 21px; 
+    font-weight: 400; 
+    letter-spacing: 1px;
 }

@@ -57,6 +57,19 @@ class GenerateRoomList extends React.Component{
 
       return (
         <div>
+            <div className="just-screen" id="device-screen">
+                <div className="screen-device">
+                    <div className="fondo">
+                        <h1 className="screen-title">
+                            <span className="screen-message">Bienvenido!</span>
+                        </h1>
+                        <div className="welcome">
+                            <p>En la parte de arriba puedes ver un resumen de tus dispositivos conectados.</p>
+                            <p>A la derecha puedes encontrar la sección de visualización y tus escenarios.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <ShowChart/>
           <div className="room-list">
             {items.map(item => (
