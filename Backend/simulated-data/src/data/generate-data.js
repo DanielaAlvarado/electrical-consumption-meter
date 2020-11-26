@@ -35,4 +35,4 @@ const generateData = async (offset) => {
     });
 };
 
-generateData(1);
+generateData(0);

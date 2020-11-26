@@ -541,7 +541,7 @@ def CheckRoom():
 	val = (name_room,)
 	#mycursor.callproc('buscarStage', val)
 
-	sql = "SELECT name FROM room WHERE name = %s;"
+	sql = "SELECT name FROM room WHERE name = %s AND status=1;"
 	mycursor.execute(sql, val)
 
 	row = mycursor.fetchone()
@@ -690,7 +690,7 @@ def deviceIndex():
 	mydb = mysql.connector.connect(**config)
 	mycursor = mydb.cursor(buffered=True)
 
-	sql = 'SELECT * FROM device where status=1'
+	sql = 'SELECT * FROM device,room where device.status=1 and room_id_room=id_room'
 	mycursor.execute(sql)
 
 	row = mycursor.fetchone()
@@ -701,6 +701,8 @@ def deviceIndex():
 		id_device['id'] = row[0]
 		id_device['name'] = row[1]
 		id_device['type'] = row[3]
+		id_device['room_id'] = row[5]
+		id_device['room'] = row[6]
 		device.append(id_device)
 		row = mycursor.fetchone()
 
