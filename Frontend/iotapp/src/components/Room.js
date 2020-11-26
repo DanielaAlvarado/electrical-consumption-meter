@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import ReactDOM from'react-dom';
 import PropTypes from 'prop-types';
-import Popup from 'reactjs-popup';
 import DeviceScreen from './DeviceScreen.js';
 import { ReactComponent } from 'react';
 
@@ -37,23 +36,6 @@ class RoomComponent extends React.Component{
         // console.log(result);
       }
     ) 
-  }
-   
-  deleteRoom(){
-    var request = new XMLHttpRequest();
-    request.onreadystatechange = (e) => {
-      if (request.readyState !== 4) {
-        return;
-      }
-      if (request.status === 200) {
-        console.log('deleted', request.responseText);
-        this.refreshPage();
-      } else {
-        console.warn('error');
-      }
-    };
-    request.open('GET', 'http://localhost:5000/deleteRoom?id_room='+ this.state.id);
-    request.send(); 
   }
 
   getType(){
@@ -120,34 +102,9 @@ class RoomComponent extends React.Component{
         <div>
           <div className="just-screen" id="device-screen"></div>
           <button className="room-item" onClick={this.handleClick.bind(this)}>
-                <Popup trigger={
-                <div>
-                  <button className="delete" >
-                  <img className="delete-icon" src={require('../icons/cancel.png')} alt="Icon"/>
-                  </button>
-                </div>
-              } modal>
-                {close => (
-                  <div className="modal">
-                    <a className="close" onClick={close}>
-                      &times;
-                    </a>           
-                    <div className="content">
-                      <h1 className="pregunta">
-                        ¿Estás seguro de eliminar "{this.state.name}"?
-                      </h1>
-                    </div>
-                    <div className="actions">
-                      <button className="aceptar" onClick={() => { this.deleteRoom(); close();}}> Aceptar </button>
-                      <button className="cancelar" onClick={() => { close();}}> Cancelar </button>
-                    </div>
-                  </div>
-                )}
-              </Popup>
-
               <div class="terms">
                 <img className={`room-icon`} src={require('../icons/salas/' + this.getType() + '.png')} alt="Icon"/>
-                <div>
+                <div className="room">
                   <h2 className="room-name">{this.state.name}</h2>
                   {items.map(d => (
                     <h1 className="device-count">
