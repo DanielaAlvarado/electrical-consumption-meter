@@ -317,6 +317,7 @@ exports.roomsWeekly = async (req, res) => {
 
         const devices = response.items;
         const rooms = {};
+        let total = 0;
         months.forEach((month) => {
             devices.forEach((device) => {
                 const recordPath = path.join(__dirname, `../data/${month}-${device.id}.csv`);
@@ -329,7 +330,10 @@ exports.roomsWeekly = async (req, res) => {
     
                 record.forEach((entry) => {
                     if(moment(new Date(parseInt(entry.date))).startOf('day').isBetween(weekStart, weekEnd, null, '[]')){
-                        rooms[device.room] = (rooms[device.room] || 0) + parseInt(entry.consumption)
+                        const consumption = parseInt(entry.consumption);
+
+                        rooms[device.room] = (rooms[device.room] || 0) + consumption;
+                        total += consumption;
                     }
                 });
             });
@@ -338,7 +342,8 @@ exports.roomsWeekly = async (req, res) => {
         const formatted = Object.keys(rooms).map((room) => {
             return {
                 room,
-                consumption: rooms[room]
+                consumption: rooms[room],
+                percentage: Math.round(rooms[room] / total * 100)
             };
         }).sort((room1, room2) => {
             return room2.consumption - room1.consumption;

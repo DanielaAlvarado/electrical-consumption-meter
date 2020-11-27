@@ -124,7 +124,7 @@ class GenerateChart extends React.PureComponent {
                     top: 30,
                     right: 50, 
                     bottom: 30,
-                    left: 30
+                    left: 40
                 };
                 const height = 400;
                 const width = 800;
